@@ -57,7 +57,10 @@ def create_transform_matrix(x, y, s_x, s_y):
 
 def get_model_dir(m):
     try:
-        return folder_paths.get_folder_paths(m)[0]
+        for dir in folder_paths.get_folder_paths(m):
+            if os.path.isdir(dir):
+                return dir
+        raise FileNotFoundError(f"{m} folder not found")
     except:
         return os.path.join(folder_paths.models_dir, m)
 
