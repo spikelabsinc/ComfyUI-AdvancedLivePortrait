@@ -527,6 +527,12 @@ def logging_time(original_fn):
 
 
 def get_or_create_exp_data_dir():
+    try:    
+        exp_data_dir = os.path.join(folder_paths.output_directory, "exp_data")
+        if os.path.isdir(exp_data_dir) == False:
+            os.mkdir(exp_data_dir)
+    except:
+        pass
     return folder_paths.output_directory
 
 class SaveExpData:
@@ -969,19 +975,17 @@ class ExpressionEditor:
         return {"ui": {"images": results}, "result": (out_img, new_editor_link, es)}
 
 NODE_CLASS_MAPPINGS = {
-    "SpikeAdvancedLivePortrait": AdvancedLivePortrait,
-    "SpikeExpressionEditor": ExpressionEditor,
-    "SpikeLoadExpData": LoadExpData,
-    "SpikeSaveExpData": SaveExpData,
-    "SpikeExpData": ExpData,
-    "SpikePrintExpData:": PrintExpData,
+    "AdvancedLivePortrait": AdvancedLivePortrait,
+    "ExpressionEditor": ExpressionEditor,
+    "LoadExpData": LoadExpData,
+    "SaveExpData": SaveExpData,
+    "ExpData": ExpData,
+    "PrintExpData:": PrintExpData,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "SpikeAdvancedLivePortrait": "Advanced Live Portrait (Spike)",
-    "SpikeExpressionEditor": "Expression Editor (Spike)",
-    "SpikeLoadExpData": "Load Exp Data (Spike)",
-    "SpikeSaveExpData": "Save Exp Data (Spike)",
-    "SpikeExpData": "Exp Data (Spike)",
-    "SpikePrintExpData:": "Print Exp Data (Spike)",
+    "AdvancedLivePortrait": "Advanced Live Portrait (PHM)",
+    "ExpressionEditor": "Expression Editor (PHM)",
+    "LoadExpData": "Load Exp Data (PHM)",
+    "SaveExpData": "Save Exp Data (PHM)"
 }
