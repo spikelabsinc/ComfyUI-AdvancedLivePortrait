@@ -526,27 +526,15 @@ def logging_time(original_fn):
     return wrapper_fn
 
 
-# Define the expression data directory
-try:
-    # First choice: output directory (but this may fail in some environments)
-    exp_data_dir = os.path.join(folder_paths.output_directory, "exp_data")
-    # Try to create it if it doesn't exist
-    if not os.path.isdir(exp_data_dir):
-        try:
-            os.makedirs(exp_data_dir, exist_ok=True)
-            print(f"Created expression data directory at: {exp_data_dir}")
-        except (PermissionError, OSError) as e:
-            print(f"Could not create directory {exp_data_dir}: {e}")
-            # Fallback: use a directory within the plugin folder
-            exp_data_dir = os.path.join(current_directory, "exp_data")
-            os.makedirs(exp_data_dir, exist_ok=True)
-            print(f"Using fallback expression data directory: {exp_data_dir}")
-except Exception as e:
-    print(f"Error setting up expression data directory: {e}")
-    # Last resort fallback
-    exp_data_dir = os.path.join(current_directory, "exp_data")
-    os.makedirs(exp_data_dir, exist_ok=True)
-    print(f"Using local expression data directory: {exp_data_dir}")
+def get_or_create_exp_data_dir():
+    try:    
+        exp_data_dir = os.path.join(folder_paths.output_directory, "exp_data")
+        if os.path.isdir(exp_data_dir) == False:
+            os.mkdir(exp_data_dir)
+    except:
+        pass
+    return folder_paths.output_directory
+
 class SaveExpData:
     @classmethod
     def INPUT_TYPES(s):
@@ -563,38 +551,20 @@ class SaveExpData:
     OUTPUT_NODE = True
 
     def run(self, file_name, save_exp:ExpressionSet=None):
-        if save_exp is None or file_name == "":
+        if save_exp == None or file_name == "":
             return file_name
 
-        try:
-            # Ensure the directory exists
-            os.makedirs(exp_data_dir, exist_ok=True)
-            
-            # Save the expression data
-            save_path = os.path.join(exp_data_dir, file_name + ".exp")
-            with open(save_path, "wb") as f:
-                dill.dump(save_exp, f)
-            print(f"Expression data saved to: {save_path}")
-        except Exception as e:
-            print(f"Error saving expression data: {e}")
-            
+        exp_data_dir = get_or_create_exp_data_dir()
+        with open(os.path.join(exp_data_dir, file_name + ".exp"), "wb") as f:
+            dill.dump(save_exp, f)
+
         return file_name
 
 class LoadExpData:
     @classmethod
     def INPUT_TYPES(s):
-        file_list = []
-        if os.path.exists(exp_data_dir) and os.path.isdir(exp_data_dir):
-            try:
-                file_list = [os.path.splitext(file)[0] for file in os.listdir(exp_data_dir) if file.endswith('.exp')]
-            except Exception as e:
-                print(f"Error loading expression data files: {e}")
-                file_list = []
-            
-        # Provide at least one option in the dropdown to avoid ComfyUI errors
-        if not file_list:
-            file_list = ["none"]
-            
+        exp_data_dir = get_or_create_exp_data_dir()
+        file_list = [os.path.splitext(file)[0] for file in os.listdir(exp_data_dir) if file.endswith('.exp')]
         return {"required": {
             "file_name": (sorted(file_list, key=str.lower),),
             "ratio": ("FLOAT", {"default": 1, "min": 0, "max": 1, "step": 0.01}),
@@ -607,24 +577,11 @@ class LoadExpData:
     CATEGORY = "AdvancedLivePortrait"
 
     def run(self, file_name, ratio):
-        # Handle the case where no expression files were found
-        if file_name == "none":
-            es = ExpressionSet()
-            return (es,)
-            
-        try:
-            exp_file_path = os.path.join(exp_data_dir, file_name + ".exp")
-            if not os.path.exists(exp_file_path):
-                print(f"Expression file not found: {exp_file_path}")
-                es = ExpressionSet()
-            else:
-                with open(exp_file_path, 'rb') as f:
-                    es = dill.load(f)
-                es.mul(ratio)
-        except Exception as e:
-            print(f"Error loading expression data: {e}")
-            es = ExpressionSet()
-            
+        # es = ExpressionSet()
+        exp_data_dir = get_or_create_exp_data_dir()
+        with open(os.path.join(exp_data_dir, file_name + ".exp"), 'rb') as f:
+            es = dill.load(f)
+        es.mul(ratio)
         return (es,)
 
 class ExpData:
