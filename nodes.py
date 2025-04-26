@@ -527,12 +527,6 @@ def logging_time(original_fn):
 
 
 def get_or_create_exp_data_dir():
-    try:    
-        exp_data_dir = os.path.join(folder_paths.output_directory, "exp_data")
-        if os.path.isdir(exp_data_dir) == False:
-            os.mkdir(exp_data_dir)
-    except:
-        pass
     return folder_paths.output_directory
 
 class SaveExpData:
