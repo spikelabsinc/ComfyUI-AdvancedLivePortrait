@@ -216,6 +216,26 @@ class LP_Engine:
             model_path = os.path.join(model_dir, "face_yolov8n.pt")
             if not os.path.exists(model_path):
                 self.download_model(model_path, "https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov8n.pt")
+            
+            # Add safe globals for ultralytics model loading
+            from ultralytics.nn.tasks import DetectionModel
+            from ultralytics.nn.modules.conv import Conv, Concat
+            from ultralytics.nn.modules.block import C2f, Bottleneck, SPPF, DFL
+            from ultralytics.nn.modules.head import Detect
+            from torch.nn import Sequential
+            from torch.nn.modules.conv import Conv2d
+            from torch.nn.modules.batchnorm import BatchNorm2d
+            from torch.nn.modules.activation import SiLU
+            from torch.nn.modules.container import ModuleList
+            from torch.nn.modules.pooling import MaxPool2d
+            from torch.nn.modules.upsampling import Upsample
+            
+            torch.serialization.add_safe_globals([
+                DetectionModel, Sequential, Conv, Conv2d, BatchNorm2d, SiLU,
+                C2f, ModuleList, Bottleneck, SPPF, MaxPool2d, Upsample,
+                Concat, Detect, DFL
+            ])
+            
             self.detect_model = YOLO(model_path)
 
         return self.detect_model
